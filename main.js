@@ -49,8 +49,7 @@ function loadPersistedUser() {
 function logout() {
   currentUser = null;
   localStorage.removeItem('fb_user');
-  showScreen('login-screen');
-  switchTab('quick');
+  window.location.href = 'login.html';
 }
 
 function loginAs(user) {
@@ -448,17 +447,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  await loadUserPicker();
-
   // Resume session
   const stored = loadPersistedUser();
   if (stored) {
     currentUser = stored;
     applyUserToUI();
-    showScreen('feed-screen');
     loadFeed();
     loadPeople();
   } else {
-    showScreen('login-screen');
+    window.location.href = 'login.html';
   }
 });
+
+window.logout = logout;
+window.openNewPostModal = openNewPostModal;
+window.closeNewPostModal = closeNewPostModal;
+window.closeModalOnBackdrop = closeModalOnBackdrop;
+window.submitPost = submitPost;
+window.openCommentsModal = openCommentsModal;
+window.closeCommentsModal = closeCommentsModal;
+window.closeCommentsOnBackdrop = closeCommentsOnBackdrop;
+window.submitComment = submitComment;
+window.handleCommentKey = handleCommentKey;

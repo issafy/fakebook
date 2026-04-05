@@ -11,56 +11,8 @@
 </head>
 <body>
 
-  <!-- ══════════════════════════════════════════════════ LOGIN SCREEN ══ -->
-  <div id="login-screen" class="screen active">
-    <div class="login-bg">
-      <div class="login-blob b1"></div>
-      <div class="login-blob b2"></div>
-      <div class="login-blob b3"></div>
-    </div>
-    <div class="login-card glass">
-      <div class="login-logo">
-        <span class="logo-icon">f</span>
-        <h1>Fakebook</h1>
-      </div>
-      <p class="login-subtitle">Connect with friends, share your world.</p>
-
-      <div class="login-tabs">
-        <button class="tab-btn active" id="tab-quick" onclick="switchTab('quick')">Quick Login</button>
-        <button class="tab-btn" id="tab-creds" onclick="switchTab('creds')">Credentials</button>
-      </div>
-
-      <!-- Quick pick -->
-      <div id="quick-tab" class="tab-content active">
-        <p class="pick-label">Pick your profile</p>
-        <div id="user-picker" class="user-picker">
-          <div class="spinner"></div>
-        </div>
-      </div>
-
-      <!-- Credentials form -->
-      <div id="creds-tab" class="tab-content">
-        <form id="login-form" onsubmit="handleLogin(event)">
-          <div class="field-group">
-            <label for="username-input">Username</label>
-            <input id="username-input" type="text" placeholder="e.g. harry_p" autocomplete="username" />
-          </div>
-          <div class="field-group">
-            <label for="password-input">Password</label>
-            <input id="password-input" type="password" placeholder="password123" autocomplete="current-password" />
-          </div>
-          <div id="login-error" class="error-msg hidden"></div>
-          <button type="submit" class="btn-primary btn-full" id="login-btn">
-            <span>Sign In</span>
-          </button>
-        </form>
-        <p class="hint">All users share the password: <code>password123</code></p>
-      </div>
-    </div>
-  </div>
-
   <!-- ═══════════════════════════════════════════════════ FEED SCREEN ══ -->
-  <div id="feed-screen" class="screen">
+  <div id="feed-screen" class="screen active">
 
     <!-- Header -->
     <header class="app-header glass">
