@@ -43,14 +43,16 @@ async function handleLogin(e) {
   btn.querySelector('span').textContent = 'Signing in…';
 
   try {
+    const basicAuth = 'Basic ' + btoa(`${username}:${password}`);
     const res = await fetch(`${API}/api/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+      headers: { 'Authorization': basicAuth },
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');
-    loginAs(data.user);
+    // Save credentials for future requests
+    persistUser({ ...data.user, _auth: basicAuth });
+    loginAs({ ...data.user, _auth: basicAuth });
   } catch (err) {
     errEl.textContent = err.message;
     errEl.classList.remove('hidden');

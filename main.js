@@ -176,7 +176,7 @@ async function loadFeed() {
   container.innerHTML = '<div class="spinner centered"></div>';
   try {
     const res   = await fetch(`${API}/api/posts`, {
-      headers: { 'x-user-id': currentUser.id },
+      headers: { 'Authorization': currentUser._auth },
     });
     const posts = await res.json();
     container.innerHTML = '';
@@ -258,7 +258,7 @@ async function toggleLike(postId, card) {
   try {
     const res  = await fetch(`${API}/api/posts/${postId}/like`, {
       method: 'POST',
-      headers: { 'x-user-id': currentUser.id },
+      headers: { 'Authorization': currentUser._auth },
     });
     const data = await res.json();
     countSpan.textContent = data.like_count;
@@ -320,7 +320,7 @@ async function submitPost() {
   try {
     const res  = await fetch(`${API}/api/posts`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-user-id': currentUser.id },
+      headers: { 'Content-Type': 'application/json', 'Authorization': currentUser._auth },
       body: JSON.stringify({ content, image_url: image_url || null }),
     });
     const post = await res.json();
@@ -345,7 +345,7 @@ async function deletePost(postId, card) {
   try {
     const res = await fetch(`${API}/api/posts/${postId}`, {
       method: 'DELETE',
-      headers: { 'x-user-id': currentUser.id },
+      headers: { 'Authorization': currentUser._auth },
     });
     if (!res.ok) throw new Error();
     card.style.opacity = '0';
@@ -412,7 +412,7 @@ async function submitComment() {
   try {
     const res  = await fetch(`${API}/api/posts/${activePostId}/comments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-user-id': currentUser.id },
+      headers: { 'Content-Type': 'application/json', 'Authorization': currentUser._auth },
       body: JSON.stringify({ content }),
     });
     const comment = await res.json();

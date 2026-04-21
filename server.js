@@ -19,9 +19,32 @@ if (isProd) {
   app.use(express.static(distPath));
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
 
+// ─── Helpers ───────────────────────────────────────────────────────────────
 const getUser = (id) => db.prepare('SELECT id, username, full_name, avatar, bio FROM users WHERE id = ?').get(id);
+
+// Basic Auth middleware
+function parseBasicAuth(authHeader) {
+  if (!authHeader || !authHeader.startsWith('Basic ')) return null;
+  const base64 = authHeader.split(' ')[1];
+  try {
+    const [username, password] = Buffer.from(base64, 'base64').toString().split(':');
+    return { username, password };
+  } catch {
+    return null;
+  }
+}
+
+function requireAuth(req, res, next) {
+  const creds = parseBasicAuth(req.headers['authorization']);
+  if (!creds) return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(creds.username);
+  if (!user || user.password !== creds.password) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  req.user = user;
+  next();
+}
 
 // ─── Users ─────────────────────────────────────────────────────────────────
 
@@ -38,17 +61,14 @@ app.get('/api/users/:id', (req, res) => {
   res.json(user);
 });
 
-// POST login (simple credential check)
+// POST login (Basic Auth check)
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
-
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-  if (!user || user.password !== password) {
+  const creds = parseBasicAuth(req.headers['authorization']);
+  if (!creds) return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(creds.username);
+  if (!user || user.password !== creds.password) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
-
-  // Return user info (no real token for this exercise)
   const { password: _, ...safeUser } = user;
   res.json({ user: safeUser });
 });
@@ -56,8 +76,8 @@ app.post('/api/login', (req, res) => {
 // ─── Posts ─────────────────────────────────────────────────────────────────
 
 // GET all posts (with author info, like count, comment count)
-app.get('/api/posts', (req, res) => {
-  const currentUserId = req.headers['x-user-id'] ? parseInt(req.headers['x-user-id']) : null;
+app.get('/api/posts', requireAuth, (req, res) => {
+  const currentUserId = req.user.id;
 
   const posts = db.prepare(`
     SELECT
@@ -111,9 +131,9 @@ app.get('/api/posts/:id', (req, res) => {
 });
 
 // POST create post
-app.post('/api/posts', (req, res) => {
-  const userId = req.headers['x-user-id'];
-  if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+app.post('/api/posts', requireAuth, (req, res) => {
+  const userId = req.user.id;
 
   const { content, image_url } = req.body;
   if (!content && !image_url) return res.status(400).json({ error: 'Post needs content or image' });
@@ -129,8 +149,9 @@ app.post('/api/posts', (req, res) => {
 });
 
 // DELETE post
-app.delete('/api/posts/:id', (req, res) => {
-  const userId = req.headers['x-user-id'];
+
+app.delete('/api/posts/:id', requireAuth, (req, res) => {
+  const userId = req.user.id;
   const post = db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
 
   if (!post) return res.status(404).json({ error: 'Post not found' });
@@ -146,9 +167,9 @@ app.delete('/api/posts/:id', (req, res) => {
 // ─── Likes ─────────────────────────────────────────────────────────────────
 
 // POST toggle like
-app.post('/api/posts/:id/like', (req, res) => {
-  const userId = req.headers['x-user-id'];
-  if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+app.post('/api/posts/:id/like', requireAuth, (req, res) => {
+  const userId = req.user.id;
 
   const existing = db.prepare('SELECT id FROM likes WHERE user_id = ? AND post_id = ?').get(userId, req.params.id);
 
@@ -177,9 +198,9 @@ app.get('/api/posts/:id/comments', (req, res) => {
 });
 
 // POST add comment
-app.post('/api/posts/:id/comments', (req, res) => {
-  const userId = req.headers['x-user-id'];
-  if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+app.post('/api/posts/:id/comments', requireAuth, (req, res) => {
+  const userId = req.user.id;
 
   const { content } = req.body;
   if (!content) return res.status(400).json({ error: 'Comment cannot be empty' });
